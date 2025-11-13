@@ -1,4 +1,4 @@
-# Цифровой Кузнечик (Digital Grasshopper)
+# Mini Puzzle Game
 
 <img width="573" height="667" alt="Capture d&#39;écran 2025-11-13 134136" src="https://github.com/user-attachments/assets/876da488-1c2e-472f-b5fa-276cce2cd383" />
 

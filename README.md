@@ -1,7 +1,3 @@
-Below is an updated README in Russian, tailored to your "Цифровой Кузнечик" (Digital Grasshopper) game based on the provided code files (`MainWindow.py`, `main.py`, `MainWindowUI.py`, `MenuWindowUI.py`, and `output.py`). It reflects the game's features, UI, and technical details.
-
----
-
 # Цифровой Кузнечик (Digital Grasshopper)
 
 ![Цифровой Кузнечик](<img width="573" height="667" alt="Capture d&#39;écran 2025-11-13 134136" src="https://github.com/user-attachments/assets/876da488-1c2e-472f-b5fa-276cce2cd383" />)

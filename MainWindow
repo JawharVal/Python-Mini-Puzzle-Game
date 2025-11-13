@@ -1,0 +1,129 @@
+import os # using operating system dependent functionality # использование операционной системы функции для получения пути
+import random
+import pygame
+from PyQt5 import QtCore, QtGui, QtWidgets, QtSvg # for working with SVG images # для работы с изображениями SVG (Scalable Vector Graphics)
+from PyQt5.QtWidgets import QMainWindow, QItemDelegate, QStyleOptionViewItem  # QItemDelegate — это базовый класс для настройки внешнего вида и поведения отдельных элементов в представлении Qt, тогда как QStyleOptionViewItem — это класс, предоставляющий подсказки по стилю и параметры для отображения элемента в представлении Qt.
+
+from PyQt5.QtGui import QMouseEvent, QPainter, QStandardItemModel # для работы с моделями и геометрическими фигурами # for handling mouse events and drawing items
+# QMouseEvent — это класс, который инкапсулирует события мыши в среде Qt, предоставляя такую информацию, как положение курсора мыши и какая кнопка мыши была нажата или отпущена.
+QPainter — это класс, предоставляющий способ выполнения низкоуровневых операций рисования в среде Qt, таких как рисование линий, прямоугольников и текста, а также более сложных операций, таких как градиенты и преобразования.
+QStandardItemModel — это класс, предоставляющий способ хранения и управления иерархическими данными в среде Qt с использованием архитектуры модель-представление. Он обычно используется для предоставления данных для представлений, таких как представления списка или представления дерева.
+
+from PyQt5.QtCore import QModelIndex, QRectF, Qt  # for working with models and geometric shapes
+from MainWindowUI import Ui_MainWindow as MainWindowUI
+from MenuWindowUI import UI_MenuWindow as MenuWindowUI
+from Game import Game
+
+pygame.init() # initializes pygame module
+pygame.mixer.init() # initializes pygame mixer module for sound playback
+click_sound = pygame.mixer.Sound('restart.wav')  # loads sound file for restarting game
+click_sound3 = pygame.mixer.Sound('start.wav')  # loads the sound file for restarting the game
+
+class MainWindow(QMainWindow, MainWindowUI, MenuWindowUI):
+    def __init__(self, parent=None):
+        super().__init__(parent) # calls parent class QMainWindow's constructor'(__init__() method is called )
+        self.MenuUi(self) # sets up UI for menu window from MenuWindowUI
+        self.prev_num = None  # Initialize a number variable as None to use for random level
+
+    def start_game(self):
+        self.setupUi(self) # sets up UI for menu window from MenuWindowUI self twali 3andha access le les methodes ta3 classes eli mawjoudin fel mainwindow
+
+        images_dir = os.path.join(os.path.dirname(__file__), 'resources/images')  # gets path to images directory
+
+        # iterate over each file in the images_dir directory and creates a key-value pair for each file,
+        # where the key is the filename without extension and the value is an SVG renderer object created from the SVG file.
+        # The resulting dictionary is assigned to the _images attribute of the self object.  ( to use the name part of the image only )
+        self._images = {
+            os.path.splitext(f)[0]:  # Use the filename without the extension as the key
+                QtSvg.QSvgRenderer(os.path.join(images_dir, f))  # Create an SVG renderer object from the SVG file
+            for f in os.listdir(images_dir)  # Iterate over each file in the directory
+        }
+
+        i = random.randint(1,10)
+        self.level_number.setValue(i)  # setting initial value for level_number spin box
+        self.game = Game(i)  # initiate a new game with random level
+        self.grid_display(self.game)  # display grid game field
+
+        # delegate is responsible for rendering and editing items in a view (painting) (tedhen el ar9am  fi el grid)
+        class MyDelegate(QItemDelegate):
+            def __init__(self, *args):
+                super().__init__(*args) #  accept any number of arguments and pass them on to the QItemDelegate constructor.
+
+            # The painter argument is a QPainter object that is used to paint the item,
+            # The option argument contains various style options that can be used to customize the painting.
+            # The idx argument is the model index of the item being painted.
+            def paint(self, painter: QPainter, option: QStyleOptionViewItem, idx: QModelIndex):
+                self.parent().on_item_paint(idx, painter, option)  # calls on_item_paint from the instance of MainWindow
+
+        delegate = MyDelegate(self)
+        self.game_field.setItemDelegate(delegate)  # sets item delegate for game field (applying the paint over)
+        self.new_game_Button.clicked.connect(self.new_game)  # connects new_game function to new_game_Button click event
+        self.new_random_Button.clicked.connect(self.random_game)  # connects new_game function to new_random_Button click event
+        click_sound3.play()  # plays start sound
+
+        def new_mouse_press_event(e: QMouseEvent) -> None:
+            # This function is called when the mouse is pressed on the game field
+            idx = self.game_field.indexAt(e.pos())  # determine the index of item at mouse position
+            self.on_item_clicked(idx, e)  # calls on_item_clicked function with index and event
+
+        self.game_field.mousePressEvent = new_mouse_press_event  # sets mousePressEvent function for game field
+
+    def grid_display(self, game: Game) -> None:  # tesna3 el grid fere8
+        # This function displaying data in the QTableView widget (game_field) and resizes the game field to fit the specified game
+        model = QStandardItemModel(game.row_count, game.col_count)  # creates a new model with specified number of rows and columns
+        self.game_field.setModel(model)  # sets model for game field for displaying data in the widget (game_field)
+        self.update_view()  # updates view
+
+    def new_game(self):
+        # This function starts/restarts a new game with the specified level number
+        self.game = Game(self.level_number.value())  # creates a new Game object with specified level number
+        self.update_view()  # updates view
+        click_sound.play()
+
+    def random_game(self):
+        i = random.randint(1, 10)  # Generate new random number between 1 and 10
+        while i == self.prev_num:  # Keep generating new numbers until it's different from previous number
+            i = random.randint(1, 10)
+        self.prev_num = i  # Set previous number to be the current new number
+        self.level_number.setValue(i)
+        self.game = Game(i)  # creates a new Game object with specified level number
+        self.update_view() # updates view
+        click_sound.play()
+
+    def update_view(self):
+        # This function updates the view of the game field
+        self.game_field.viewport().update()
+
+    def on_item_paint(self, e: QModelIndex, painter: QPainter, option: QStyleOptionViewItem) -> None:
+        # This function is called when an item in the game field needs to be painted
+        cell = self.game.field[e.row()][e.column()]  # gets a cell at specified index
+        img = self._images['default']  # sets default image for cell
+        if cell.block:
+            # If cell is a block
+            name = ""
+            if cell.is_active:
+                name = name + "active "  # adds "active" to image name if block is active
+            if cell.is_locked:
+                name = name + "locked "  # adds "locked" to image name if block is locked
+
+            if cell.number == 1:
+                name = name + "1"  # adds number to image name if block has a number
+            if cell.number == 2:
+                name = name + "2"
+            if cell.number == 3:
+                name = name + "3"
+            if cell.number == 4:
+                name = name + "4"
+            img = self._images[name]  # sets image for block
+        if cell.step:
+            img = self._images['step']  # sets image for step
+
+        img.render(painter, QRectF(option.rect))  # renders image in specified rectangle that specifies the area of the painter to be drawn with the image
+
+    def on_item_clicked(self, e: QModelIndex, me: QMouseEvent = None) -> None:
+        # This function is called when an item in the game field is clicked to retrieve the index of the cell clicked on
+        if me.button() == Qt.LeftButton or me.button() == Qt.RightButton:
+             # If left or right mouse button was clicked
+            self.game.on_button_click(e.row(), e.column())  # calls on_button_click function of game object
+        self.update_view()  # updates view
+

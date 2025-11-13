@@ -1,0 +1,85 @@
+from PyQt5 import QtGui, QtWidgets # QtGui module used for fonts // QtWidgets module used to make elements like buttons and labels ..
+from PyQt5.QtWidgets import QMessageBox, QLabel #  2 widgets classes: QMessageBox class to display a message // QLabel class that can display text
+from PyQt5.QtGui import QIcon # QIcon class to load icons
+
+class UI_MenuWindow:
+    def MenuUi(self, MenuWindow): # Method MenuUI took arguments self and MenuWindow object who is an instance of QMainWindow class (self fel MainWindow.py) which is a redefined class in the PyQt to create the main application window !!
+        MenuWindow.setFixedSize(470, 350) # resize a method applicable of QMainWindow
+        pixmap = QtGui.QPixmap("rr.png") # get an image
+        palette = QtGui.QPalette()
+        palette.setBrush(QtGui.QPalette.Window, QtGui.QBrush(pixmap)) # load image as the background for the main window
+        MenuWindow.setPalette(palette)
+
+        icon = QIcon("grass.png")
+        MenuWindow.setWindowIcon(icon)
+
+        # self.Menucentralwidget instance attribue lbara of  __init__ ma3neha 3ibara zedet attribue fel initialisation lel class ema mech fel init
+        self.Menucentralwidget = QtWidgets.QWidget() # jebna QWidget() class men module QtWidgets eli houwa 3ibara 3la rectangular area w 3tineha lel variable heki
+        MenuWindow.setCentralWidget(self.Menucentralwidget)  # set up el central widget fel application eli bech n7tou fih les widgets el kol
+
+        self.gridLayout = QtWidgets.QGridLayout(self.Menucentralwidget) # QGrid layout tosle7 bech ta3mel grid fel central widget bech t7ot location ta3 kol widget betad9i9
+
+        self.label = QtWidgets.QLabel(self.Menucentralwidget)
+        self.label.setText("Добро пожаловать в 'Цифровой кузнечик' ")
+        self.label.move(10, 15)
+        self.label.setFixedSize(470, 40)
+        self.label.setStyleSheet("""
+                    QLabel {color: white;font-size: 22px;font-family: Comic Sans MS;}
+                    """)
+
+        self.play_button = QtWidgets.QPushButton(self.Menucentralwidget)
+        self.play_button.setFixedSize(30, 32)
+        self.play_button.setToolTip("Start!")
+        self.play_button.setFont(QtGui.QFont('Comic Sans MS', 11, QtGui.QFont.Bold))
+        self.play_button.clicked.connect(self.start_game)
+        self.gridLayout.addWidget(self.play_button, 8, 1, 1,1)  # START at row 8 and column 1 ,AND COVER  row span of 1 and column span of 1. This means the button will occupy a single cell in the grid.
+        self.play_button.setStyleSheet("""
+                    QPushButton {background-color: #54DDFF; color: white; padding: 20px 42px; text-align: center; font-size: 27px; margin: 4px 2px; min-height: 40px; min-width: 150px; font-family: Comic Sans MS, sans-serif;}
+                    QPushButton:hover {background-color: #9FECFE;}
+                    """)
+
+        self.rule_button = QtWidgets.QPushButton(self.Menucentralwidget)
+        self.rule_button.setFixedSize(30, 32)
+        self.rule_button.setToolTip("Rules")
+        self.rule_button.setFont(QtGui.QFont('Comic Sans MS', 11, QtGui.QFont.Bold))
+        self.rule_button.clicked.connect(self.show_instructions)
+        self.gridLayout.addWidget(self.rule_button, 12, 1, 1, 1)
+        self.rule_button.setStyleSheet("""
+                    QPushButton {background-color: #54DDFF; color: white; padding: 20px 42px; text-align: center; font-size: 27px; margin: 4px 2px; min-height: 40px; min-width: 150px; font-family: Comic Sans MS, sans-serif;}
+                    QPushButton:hover {background-color: #9FECFE;}
+                    """)
+
+        self.MenutextUI(MenuWindow)
+
+    def MenutextUI(self, MenuWindow):
+        MenuWindow.setWindowTitle("Меню")
+        self.play_button.setText("Играть!")
+        self.rule_button.setText("Правила")
+
+    def show_instructions(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setWindowTitle("Инструкции")
+        icon = QIcon("grass.png")
+        msgBox.setWindowIcon(icon)
+        msgBox.setInformativeText(
+            "Вот инструкции:"
+            "\n\nЗадача: сделать по одному ходу каждой фишкой. Длинна шага - число на фишке."
+            "\n\nКак играть в Цифровой кузнечик : Управление: кликаете мышкой на фишку и видите места куда можно сделать ход,"
+            " они помечены крестиком, если есть доступные ходы для этой фишки. Начать уровень сначала - restart.")
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        style_sheet = """
+            QMessageBox {background-image: url(rules.png);background-size: cover;color: white;font-size: 20px;}
+            QMessageBox QLabel { padding: 6px 0px;color: white;}
+            QMessageBox QPushButton {background-color: #1E90FF;color: white;border: none;padding: 15px 20px;margin: 5px;font-size: 20px;}
+            QMessageBox QPushButton:hover {background-color: #0066CC;}
+            """
+        label = QLabel()
+        label.setText(
+            '<br><br><a href="http://igroflot.ru/flash_games_36.htm">Нажмите здесь для получения дополнительной информации об игре</a>')
+        label.setOpenExternalLinks(True)
+        label.move(78,35)
+        msgBox.layout().addWidget(label) # returns the layout that is currently set for the QMessageBox and add a widget to it (label)
+        msgBox.setStyleSheet(style_sheet)
+        msgBox.exec_() # display
+

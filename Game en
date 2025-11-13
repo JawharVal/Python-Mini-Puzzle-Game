@@ -1,0 +1,212 @@
+C:\Users\legion\Desktop\2ème année\2eme semestre\python\prqtiaue\5\Task5>pyuic5 -x gg.ui -o mydesign.py
+
+import copy # bech nesta3mlouha mba3d bech ncopiw el element mta3 gamecell w fi kol cell w na3mlou fild fere8 bel sfoura
+import pygame # bech nesta3mlou bech na3mlou el sound effect
+from enum import Enum # bech na3mlou constant ya3tina el state mta3 el lo3ba
+from PyQt5.QtWidgets import QMessageBox # bech ya3tina el message at the game end
+from PyQt5.QtGui import QIcon
+
+pygame.init() # initializes all required pygame modules that need to be initialized
+pygame.mixer.init() # initializes the mixer module which is used for handling sound in Pygame.
+
+class GameCell: # used to create an empty cell.
+    def __init__(self, block: bool = False, number: int = 0, step: bool = False, is_locked=False, is_active=False):
+        self._block = block # whether the cell is blocked or not
+        self._number = number # the number in the cell
+        self._step = step # whether a step has been taken on this cell or not
+        self._is_locked = is_locked # whether the cell is locked or not
+        self._is_active = is_active # whether the cell is active or not
+
+    # A decorator in Python is a design pattern that allows you to modify the functionality of a function by wrapping it in another function 1. The outer function is called the decorator, which takes the original function as an argument and returns a modified version of it. Decorators provide a simple syntax for calling higher-order functions
+    @property #  decorator, allows to turn class attributes into properties or managed attributes.@property is a decorator in Python that allows you to turn a method into a read-only attribute. It’s a pythonic way to use getters and setters in object-oriented programming 1. This means that you can access the method like an attribute, without calling it like a function. For example, in your code, you can access the block attribute of a GameCell object by calling my_game_cell.block instead of my_game_cell.block()
+    def block(self) -> bool:
+        return self._block
+
+
+
+    @property
+    def number(self) -> int:
+        return self._number
+
+    @property
+    def step(self) -> bool:
+        return self._step
+
+    @property
+    def is_locked(self) -> bool:
+        return self._is_locked
+
+    @property
+    def is_active(self) -> bool:
+        return self._is_active
+
+
+def read_int_multy_array_form_file(level_number: int):
+    # This function reads a multi-dimensional array of integers from a file
+    path = "resources/levels/level " + str(level_number) # sets the path to the file based on the level number
+    with open(path) as file: # opens the file at the specified path
+        lst = file.readlines() # reads all lines from the file into a list
+    return [[int(n) for n in x.split()] for x in lst] # returns a list of lists where each inner list represents a row of integers from the file
+
+
+class GameState(Enum): # An enumeration is a set of named values that represent a set of constants.
+    PLAYING = 1
+    WIN = 2
+
+
+class Game:
+    def __init__(self, start_level: int):
+        self._state = None # the current state of the game
+        self._row_count = 0 # the number of rows in the game field
+        self._col_count = 0 # the number of columns in the game field
+        self._field = [] # the game field represented as a list of lists
+        self._current_level = start_level # the current level being played
+        self.new_game() # starts a new game
+        self._current_cell = None # the currently selected cell
+        self._current_cell_row = None # the row index of the currently selected cell (if any)
+        self._current_cell_col = None # the column index of the currently selected cell (if any)
+        self._steps = [] # a list of steps taken in this game
+
+    def new_game(self) -> None:
+        self.init_game_field() # initializes a new game field based on current level data
+        self._state = GameState.PLAYING # sets state to playing
+
+    @property
+    def row_count(self) -> int:
+        return self._row_count
+
+    @property
+    def col_count(self) -> int:
+        return self._col_count
+
+    @property
+    def field(self) -> list:
+        return self._field
+
+    @property
+    def state(self) -> GameState:
+        return self._state
+
+    @property
+    def current_level(self) -> int:
+        return self._current_level
+
+
+    def init_game_field(self):
+        # This function initializes a new game field based on current level data
+ # plays the restart sound
+        level = read_int_multy_array_form_file(self._current_level)  # reads level data from file
+        self._col_count = len(level[0])  # sets the number of columns based on level data , By getting the length of this first row, we can determine how many columns there are in the 2D array or matrix represented by level.
+        self._row_count = len(level)  # sets the number of rows based on level data
+
+        # creates a 2D list, Each element of the list is initialized as a deep copy of a list containing GameCell() objects.
+        self._field = [copy.deepcopy([GameCell() for c in range(self.col_count)]) for r in range(self.row_count) ]
+
+        for row in range(len(level)):
+            for column in range(len(level[0])):
+                cell = level[row][column]  # gets cell value from level data
+                if cell == 1:
+                    self._field[row][column] = GameCell(block=True, number=1)  # creates a blocked cell with number 1
+                if cell == 2:
+                    self._field[row][column] = GameCell(block=True, number=2)  # creates a blocked cell with number 2
+                if cell == 3:
+                    self._field[row][column] = GameCell(block=True, number=3)  # creates a blocked cell with number 3
+                if cell == 4:
+                    self._field[row][column] = GameCell(block=True, number=4)  # creates a blocked cell with number 4```
+
+    def find_steps(self, row, column):
+        # This function finds all possible steps from the current cell
+        if self._current_cell is None or not self._current_cell.block or self._current_cell.step:
+            return None
+        else:
+            step = self._current_cell.number  # gets the number of steps that can be taken from the current cell
+            self.check_neighbor(row - step, column)  # checks if a step can be taken to the north
+            self.check_neighbor(row + step, column)  # checks if a step can be taken to the south
+            self.check_neighbor(row, column - step)  # checks if a step can be taken to the west
+            self.check_neighbor(row, column + step)  # checks if a step can be taken to the east
+            self.check_neighbor(row - step, column + step)  # checks if a diagonal step can be taken to the northeast
+            self.check_neighbor(row + step, column + step)  # checks if a diagonal step can be taken to the southeast
+            self.check_neighbor(row - step, column - step)  # checks if a diagonal step can be taken to the northwest
+            self.check_neighbor(row + step, column - step)  # checks if a diagonal 	step can be taken to southwest
+
+    def check_neighbor(self, row, column): # This function checks if a step can be taken to the specified cell
+        if row < 0 or row >= len(self._field) or column < 0 or column >= len(self.field[row]): # returns if the specified cell is out of bounds
+            return None
+        elif not self._field[row][column].block and not self._field[row][column].step: # par élimination mahich block nn step nn lbara mel border donc c vide leblasa donc najmou n7arkoulha el block
+            self._field[row][column]._step = True  # sets the step property of the specified cell to True
+            self._steps.append([row, column])  # adds the specified cell to the list of steps
+
+    def swap_cells(self, row, col):
+        # This function swaps the current cell with the specified cell
+        self._field[row][col] = self._current_cell  # moves the current cell to the specified location
+        self._field[row][col]._is_locked = True  # locks the current cell in its new location
+        self._field[row][col]._is_active = False  # deactivates the current cell
+        self._field[self._current_cell_row][self._current_cell_col] = GameCell()  # replaces the old location of the current cell with an empty cell
+
+        # the specified cell has already been stepped on,
+        # so the method removes it from the list of steps using the remove() method
+        for cell in self._steps:
+            if cell[0] == row and cell[1] == col:
+                self._steps.remove(cell)  # removes the specified cell from the list of steps
+
+        # Check if all pieces have been moved
+        all_pieces_moved = True
+        for row in range(self.row_count):
+            for col in range(self.col_count):
+                if self.field[row][col].block and not self.field[row][col].is_locked:
+                    all_pieces_moved = False  # sets all_pieces_moved to False if a blocked piece is found that is not locked
+
+        # If all pieces have been moved, show message
+        if all_pieces_moved:
+            self._state = GameState.WIN  # sets game state to WIN
+            click_sound4 = pygame.mixer.Sound('cong.wav')
+            click_sound4.play()
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("END")
+            msg_box.setText("Успех.")
+            icon = QIcon("grass.png")
+            msg_box.setWindowIcon(icon)
+            style_sheet = """
+                QMessageBox {background-repeat: no-repeat;background-size: cover;background-color: #242424;color: white;font-size: 20px;}
+                QMessageBox QLabel { padding: 1px 0px;color: white;}
+                QMessageBox QPushButton {background-color: #71C671;color: white;border: none;padding: 15px 20px;margin: 5px;font-size: 20px;}
+                QMessageBox QPushButton:hover {background-color: #7CCD7C;}
+                """
+            msg_box.setStyleSheet(style_sheet)
+            msg_box.exec_()
+
+    # If a match is found, it means that the specified cell has already been stepped on, so the method removes it from the list of steps
+    def clear_steps(self):
+        # This function clears all steps from the game field
+        for cell in self._steps:
+            self._field[cell[0]][cell[1]] = GameCell()  # replaces each step with an empty cell
+        self._steps.clear()  # effectively clears the history of steps taken in the game.
+
+
+    def on_button_click(self, row: int, col: int):
+        # This function is called when a button on the game field is clicked
+        click_sound = pygame.mixer.Sound('click.wav')  # loads sound file for clicking a block
+        click_sound2 = pygame.mixer.Sound('click2.wav')  # loads sound file for clicking a step
+
+        if self.state != GameState.PLAYING:
+            return  # returns if the game state is not PLAYING
+
+        # If a block that is not locked is clicked
+        if self._field[row][col].block and not self._field[row][col].is_locked:
+            if self._current_cell is not None:
+                self._current_cell._is_active = False  # deactivates the last current cell clicked on
+            self._current_cell = self._field[row][col]  # sets the current cell to the clicked block
+            self._current_cell._is_active = True  # activates the current cell
+            self.clear_steps()   # tna7i el steps "x" ta3 el current cell eli kont nezel 3liha
+            self._current_cell_row = row
+            self._current_cell_col = col
+            self.find_steps(row, col)  # finds all possible steps from the current cell
+
+            click_sound.play() # plays sound for clicking a block
+
+        # Check if a step is clicked
+        if self._field[row][col].step: #True
+            # If a step is clicked
+            self.swap_cells(row, col)  # swaps current cell with specified cell
+            self.clear_steps()  # clears all steps from game field // tna7i les autres steps that were possible for that moved cell after swap
+            click_sound2.play()  # plays sound for clicking a step

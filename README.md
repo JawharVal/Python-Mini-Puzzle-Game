@@ -1,6 +1,6 @@
 # Цифровой Кузнечик (Digital Grasshopper)
 
-![Цифровой Кузнечик](<img width="573" height="667" alt="Capture d&#39;écran 2025-11-13 134136" src="https://github.com/user-attachments/assets/876da488-1c2e-472f-b5fa-276cce2cd383" />)
+<img width="573" height="667" alt="Capture d&#39;écran 2025-11-13 134136" src="https://github.com/user-attachments/assets/876da488-1c2e-472f-b5fa-276cce2cd383" />
 
 Игра-головоломка с движением плиток, созданная на Python с использованием PyQt5 для интерфейса и Pygame для звуковых эффектов. Перемещайте плитки с номерами (1-4) на 4x4 сетке, где длина шага зависит от числа на плитке. Проверьте свои стратегические навыки на разных уровнях!
 
